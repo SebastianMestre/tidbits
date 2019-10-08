@@ -21,8 +21,15 @@ class Edge {
 	}
 };
 
-const VERTEX_COUNT = 100;
-const EDGE_COUNT = 300;
+const BUILDING_VERTICES = "building vertices";
+const BUILDING_EDGES = "building edges";
+const SORTING_EDGES = "sorting edges";
+const BUILDING_DATASTRUCTURES = "building data structures";
+const BUILDING_TREE = "building tree";
+const DONE = "done";
+
+let VERTEX_COUNT = 100;
+let EDGE_COUNT = 300;
 
 // const MAX_WEIGHT = 100;
 // const MIN_WEIGHT = -100;
@@ -33,26 +40,28 @@ let JITTER = 45;
 let vertices = [];
 let edges = [];
 
-function setup () {
-	canvas = document.getElementById("canvas");
-	context = canvas.getContext("2d");
-};
-
-const BUILDING_VERTICES = "building vertices";
-const BUILDING_EDGES = "building edges";
-const SORTING_EDGES = "sorting edges";
-const BUILDING_DATASTRUCTURES = "building data structures";
-const BUILDING_TREE = "building tree";
-const DONE = "done";
-
 let state = BUILDING_VERTICES;
 let completion = 0;
 
 let vertex_idx = 0;
 let edge_idx = 0;
 
-let UF;
+let UF = null;
 let keepers = [];
+
+function setup () {
+	canvas = document.getElementById("canvas");
+	context = canvas.getContext("2d");
+
+	vertices = [];
+	edges = [];
+	state = BUILDING_VERTICES;
+	completion = 0;
+	vertex_idx = 0;
+	edge_idx = 0;
+	UF = null;
+	keepers = [];
+};
 
 function update () {
 
@@ -209,3 +218,19 @@ function draw () {
 	context.fillText(state + "(" + completion + "%)", 0, 20);
 }
 
+function rerun () {
+	let verticesInput = document.getElementById("vertices-input");
+	let edgesInput = document.getElementById("edges-input");
+
+	VERTEX_COUNT = Number(verticesInput.value);
+	EDGE_COUNT = Number(edgesInput.value);
+
+	window.clearInterval(intervalID);
+
+	setup();
+	update();
+	intervalID = window.setInterval(update, 10);
+}
+
+document.getElementById("run-input")
+	.addEventListener("click", rerun);
