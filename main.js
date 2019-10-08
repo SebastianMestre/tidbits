@@ -1,42 +1,42 @@
 import {union_find} from './union_find.js';
-import {distsq} from './geometry.js';
+import {distsq, dist} from './geometry.js';
 import {binary_search} from './algorithms.js';
 import {point, batched_line} from './drawing.js';
 
 let canvas;
 let context;
+let intervalID;
 
 window.addEventListener("load", () => {
-    setup();
-    update();
-    window.setInterval(update, 30);
+	setup();
+	update();
+	intervalID = window.setInterval(update, 10);
 });
 
 class Edge {
-    constructor ( source, destination, weight ) {
-        this.src = source;
-        this.dst = destination;
-        this.weight = weight;
-    }
+	constructor ( source, destination, weight ) {
+		this.src = source;
+		this.dst = destination;
+		this.weight = weight;
+	}
 };
 
 const VERTEX_COUNT = 100;
 const EDGE_COUNT = 300;
 
-const MAX_WEIGHT = 100;
-const MIN_WEIGHT = -100;
+// const MAX_WEIGHT = 100;
+// const MIN_WEIGHT = -100;
+
+let EDGE_LENGTH = 85;
+let JITTER = 45;
 
 let vertices = [];
 let edges = [];
 
-
 function setup () {
-    canvas = document.getElementById("canvas");
-    context = canvas.getContext("2d");
-
+	canvas = document.getElementById("canvas");
+	context = canvas.getContext("2d");
 };
-
-let step = 0;
 
 const BUILDING_VERTICES = "building vertices";
 const BUILDING_EDGES = "building edges";
@@ -46,6 +46,7 @@ const BUILDING_TREE = "building tree";
 const DONE = "done";
 
 let state = BUILDING_VERTICES;
+let completion = 0;
 
 let vertex_idx = 0;
 let edge_idx = 0;
@@ -64,18 +65,19 @@ function update () {
 		const phi = (1+Math.sqrt(5))/2;
 
 		// Build a jittered grid, this implies the following invariant
-		// INVARIANT: vertices are almost sorted from left to right
+		// INVARIANT 1: vertices are almost sorted from left to right
 
 		let x = vertex_idx / VERTEX_COUNT * canvas.width - canvas.width/2;
 		let y = ((vertex_idx * phi * canvas.height) % canvas.height) - canvas.height / 2;
 
-		x += 20 * Math.random() - 10;
-		y += 20 * Math.random() - 10;
+		x += JITTER * Math.random() - JITTER / 2;
+		y += JITTER * Math.random() - JITTER / 2;
 
 		y *= (canvas.height - 80) / canvas.height;
 		x *= (canvas.width - 80) / canvas.width;
 
 		vertex_idx++;
+		completion = Math.floor(100 * vertex_idx / VERTEX_COUNT);
 		vertices.push({x, y});
 	}
 
@@ -88,22 +90,25 @@ function update () {
 
 		let current = Math.floor(Math.random()*VERTEX_COUNT);
 
-		let dist = 80;
 		const comp = (a, b)=> a.x < b;
-		let lo = binary_search(vertices, 0, current, vertices[current].x-dist, comp);
-		let hi = binary_search(vertices, current, VERTEX_COUNT, vertices[current].x+dist, comp);
+
+		// INVARIANT 1 Allows us to do approximate binary search, which is good enough fo our purposes
+		let lo = binary_search(vertices, 0, current, vertices[current].x-EDGE_LENGTH, comp);
+		let hi = binary_search(vertices, current, VERTEX_COUNT, vertices[current].x+EDGE_LENGTH, comp);
 
 		let options = [...new Array(hi-lo)]
 			.map((_,id) => id+lo)
 			.filter(id =>
-				distsq(vertices[id], vertices[current]) < dist*dist);
+				distsq(vertices[id], vertices[current]) < EDGE_LENGTH*EDGE_LENGTH);
 
 		let r = (Math.random() * options.length)|0;
 		let other = options[r];
 
-		let weight = Math.floor(MIN_WEIGHT + Math.random()*(MAX_WEIGHT - MIN_WEIGHT));
+		// let weight = Math.floor(MIN_WEIGHT + Math.random()*(MAX_WEIGHT - MIN_WEIGHT));
+		let weight = dist(vertices[other], vertices[current]);
 
 		edge_idx++;
+		completion = Math.floor(100 * edge_idx / EDGE_COUNT);
 		edges.push(new Edge(current, other, weight));
 	}
 
@@ -122,7 +127,7 @@ function update () {
 		}
 
 		edge_idx++;
-
+		completion = Math.floor(100 * edge_idx / EDGE_COUNT);
 	}
 
 	if ( state === BUILDING_DATASTRUCTURES ) {
@@ -135,7 +140,7 @@ function update () {
 		return;
 	}
 
-    if ( state == BUILDING_TREE ) {
+	if ( state == BUILDING_TREE ) {
 		if ( edge_idx === EDGE_COUNT ) {
 			state = DONE;
 			return;
@@ -148,17 +153,21 @@ function update () {
 		}
 
 		edge_idx++;
-    }
+		completion = Math.floor(100 * edge_idx / EDGE_COUNT);
+	}
 
-    draw();
-    step++;
+	if ( state == DONE ) {
+		window.clearInterval(intervalID);
+	}
+
+	draw();
 };
 
 function draw () {
-    context.fillStyle = "#333";
-    context.fillRect(0,0,canvas.width, canvas.height);
+	context.fillStyle = "#333";
+	context.fillRect(0,0,canvas.width, canvas.height);
 
-    context.lineWidth = 4;
+	context.lineWidth = 2;
 
 
 	const styles = ["#111", "#222", "#444", "#555"];
@@ -189,14 +198,14 @@ function draw () {
 	}
 	context.stroke();
 
-    context.fillStyle = "#FFF";
-    for(let i = 0; i < vertices.length; ++i) {
-        let {x, y} = vertices[i];
-        point( x, y, 5, context );
-    }
+	context.fillStyle = "#FFF";
+	for(let i = 0; i < vertices.length; ++i) {
+		let {x, y} = vertices[i];
+		point( x, y, 2, context );
+	}
 
 	context.font = "18px helvetica";
 	context.fillStyle = "#666";
-	context.fillText(state, 0, 20);
+	context.fillText(state + "(" + completion + "%)", 0, 20);
 }
 
