@@ -2,7 +2,7 @@
 const body = document.body;
 
 const tipHtml = `
-<div class="tip">
+<div class="message-box tip">
 	<p>Click on the board to enable and disable cells!</p>
 	<button class="tip-button">Got it!</button>
 </div>
