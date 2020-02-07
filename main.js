@@ -106,29 +106,28 @@ function marchingSquares (startX, startY, endX, endY) {
 	return result;
 }
 
+function squareAt (target, cellX, cellY) {
+	// (cell * spacing) is the top left corner of the cell.
+	// adding offset, puts us on the corner of the square.
+	const x = cellX * spacingWidth + offsetWidth;
+	const y = cellY * spacingHeight + offsetHeight;
+	target.fillRect(x, y, blockWidth, blockHeight);
+}
 
 function fullDraw () {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	ctx.fillStyle = "#2c3";
-	for (let cellY = 0, i = 0; cellY < heightInCells; ++cellY){
-		for (let cellX = 0; cellX < widthInCells; ++cellX, ++i){
-			if(!active[i]) continue;
-			const x = cellX * spacingWidth + offsetWidth;
-			const y = cellY * spacingHeight + offsetHeight;
-			ctx.fillRect(x, y, blockWidth, blockHeight);
-		}
-	}
+	for (let cellY = 0, i = 0; cellY < heightInCells; ++cellY)
+		for (let cellX = 0; cellX < widthInCells; ++cellX, ++i)
+			if(active[i])
+				squareAt(ctx, cellX, cellY);
 
 	ctx.fillStyle = "#c23";
-	for (let cellY = 0, i = 0; cellY < heightInCells; ++cellY){
-		for (let cellX = 0; cellX < widthInCells; ++cellX, ++i){
-			if(active[i]) continue;
-			const x = cellX * spacingWidth + offsetWidth;
-			const y = cellY * spacingHeight + offsetHeight;
-			ctx.fillRect(x, y, blockWidth, blockHeight);
-		}
-	}
+	for (let cellY = 0, i = 0; cellY < heightInCells; ++cellY)
+		for (let cellX = 0; cellX < widthInCells; ++cellX, ++i)
+			if(!active[i])
+				squareAt(ctx, cellX, cellY);
 
 	drawLines(0, 0, widthInCells, heightInCells);
 }
@@ -157,10 +156,7 @@ function updatedDraw (cellX, cellY) {
 				ctx.fillStyle = "#c23";
 			}
 
-			const x = cx * spacingWidth + offsetWidth;
-			const y = cy * spacingHeight + offsetHeight;
-
-			ctx.fillRect(x, y, blockWidth, blockHeight);
+			squareAt(ctx, cx, cy);
 		}
 	}
 
