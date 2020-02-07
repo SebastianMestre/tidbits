@@ -30,31 +30,48 @@ function index (x, y) {
 }
 
 function marchingSquares (startX, startY, endX, endY) {
+
+	// Marching squares builds a set of line segments that
+	// separate boolean values placed on grid points.
+	//
+	// We build a bitmask that tells us which points are in
+	// and which are out, around a certain grid cell.
+	//
+	// We then use that mask as an index into LUT, which
+	// tells us which points we need on each case.
+	//
+	// This table only contains indices. To get the actual
+	// positions, we use those indices to access the 'pos'
+	// table
+
 	const LUT = [
-		[],     // 0000
-		[0, 1], // 0001
-		[1, 2], // 0010
-		[0, 2], // 0011
-		[3, 0], // 0100
-		[1, 3], // 0101
+		[],           // 0000
+		[0, 1],       // 0001
+		[1, 2],       // 0010
+		[0, 2],       // 0011
+		[3, 0],       // 0100
+		[1, 3],       // 0101
 		[1, 2, 3, 0], // 0110
-		[2, 3], // 0111
-		[2, 3], // 1000
-		[0, 1, 2 , 3], // 1001
-		[1, 3], // 1010
-		[3, 0], // 1011
-		[0, 2], // 1100
-		[1, 2], // 1101
-		[0, 1], // 1110
-		[], // 1111
+		[2, 3],       // 0111
+		[2, 3],       // 1000
+		[0, 1, 2, 3], // 1001
+		[1, 3],       // 1010
+		[3, 0],       // 1011
+		[0, 2],       // 1100
+		[1, 2],       // 1101
+		[0, 1],       // 1110
+		[],           // 1111
 	];
 
+	// The 4 lattice-line-center points that we will use to
+	// build the line segments
 	const pos = [
 		[ 1,  0],
 		[ 0,  1],
 		[-1,  0],
 		[ 0, -1],
 	];
+
 	const w = spacingWidth / 2;
 	const h = spacingHeight / 2;
 
@@ -75,6 +92,7 @@ function marchingSquares (startX, startY, endX, endY) {
 				const p0 = l[i];
 				const p1 = l[i+1];
 
+				// Map from grid-space to canvas-space
 				let x0 = x + pos[p0][0] * w;
 				let y0 = y + pos[p0][1] * h;
 				let x1 = x + pos[p1][0] * w;
