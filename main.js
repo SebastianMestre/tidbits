@@ -1,18 +1,22 @@
 
+const ON_COLOR = "#a5be00";
+const OFF_COLOR = "#679436";
+const LINE_COLOR = "#efe7da";
+
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
 let widthInPixels = canvas.width;
 let heightInPixels = canvas.height;
 
-let widthInCells  = 20;
-let heightInCells = 15;
+let widthInCells  = 2 * 20;
+let heightInCells = 2 * 15;
 let totalCells = widthInCells * heightInCells;
 
 const spacingWidth = widthInPixels / widthInCells;
 const spacingHeight = heightInPixels / heightInCells;
 
-const blockWidth = 6;
+const blockWidth = 20;
 const blockHeight = blockWidth;
 
 const offsetWidth = (spacingWidth - blockWidth) / 2;
@@ -122,13 +126,13 @@ function squareAt (target, cellX, cellY) {
 function fullDraw () {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	ctx.fillStyle = "#2c3";
+	ctx.fillStyle = ON_COLOR;
 	for (let cellY = 0, i = 0; cellY < heightInCells; ++cellY)
 		for (let cellX = 0; cellX < widthInCells; ++cellX, ++i)
 			if(active[i])
 				squareAt(ctx, cellX, cellY);
 
-	ctx.fillStyle = "#c23";
+	ctx.fillStyle = OFF_COLOR;
 	for (let cellY = 0, i = 0; cellY < heightInCells; ++cellY)
 		for (let cellX = 0; cellX < widthInCells; ++cellX, ++i)
 			if(!active[i])
@@ -173,9 +177,9 @@ function updatedDraw (cellX, cellY) {
 			let cy = cellY + dy;
 
 			if (active[index(cx, cy)]) {
-				ctx.fillStyle = "#2c3";
+				ctx.fillStyle = ON_COLOR;
 			} else {
-				ctx.fillStyle = "#c23";
+				ctx.fillStyle = OFF_COLOR;
 			}
 
 			squareAt(ctx, cx, cy);
@@ -207,7 +211,7 @@ function updatedDraw (cellX, cellY) {
 function drawLines (target, startX, startY, endX, endY, moveX = 0, moveY = 0) {
 	const lines = marchingSquares(startX, startY, endX, endY);
 	target.lineWidth = 2;
-	target.strokeStyle = "#ccd";
+	target.strokeStyle = LINE_COLOR;
 	target.beginPath();
 	for (let i = 0; i < lines.length; i += 4) {
 		target.moveTo(lines[i+0] - moveX, lines[i+1] - moveY);

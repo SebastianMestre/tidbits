@@ -9,9 +9,9 @@
 }
 
 .tip-button {
-	color: #ccd;
-	background: #444;
-	border: 2px solid #ccd;
+	color: var(--text);
+	background: var(--foreground);
+	border: 2px solid var(--text);
 	border-radius: 4px;
 	padding: 0.5em;
 
@@ -22,7 +22,7 @@
 }
 
 .tip-button:hover {
-	color: #444;
-	background: #ccd;
-	border: 2px solid #ccd;
+	color: var(--foreground);
+	background: var(--text);
+	border: 2px solid var(--text);
 }
