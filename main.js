@@ -21,6 +21,11 @@ const offsetHeight = (spacingHeight - blockHeight) / 2;
 const centerOffsetWidth = spacingWidth / 2;
 const centerOffsetHeight = spacingHeight / 2;
 
+let offCanvas = document.createElement("canvas");
+offCanvas.width  = blockWidth  + spacingWidth  * 2;
+offCanvas.height = blockHeight + spacingHeight * 2;
+let offCtx = offCanvas.getContext("2d");
+
 let active = new Array(totalCells);
 active.fill(false);
 active = active.map(() => Math.random() < 0.5);
@@ -129,18 +134,35 @@ function fullDraw () {
 			if(!active[i])
 				squareAt(ctx, cellX, cellY);
 
-	drawLines(0, 0, widthInCells, heightInCells);
+	drawLines(ctx, 0, 0, widthInCells, heightInCells);
 }
 
 function updatedDraw (cellX, cellY) {
 
+	// We clear a 2x2 cell area around the updated point.
+	// This includes neighboring squares.
+	//
+	// Then, we re-render the squares onto the main canvas,
+	// and render the lines to an off-screen canvas, which
+	// we then paint over the main canvas.
+	//
+	// This is done to prevent drawing lines over lines and
+	// end up with aliasing and other artifacts.
 	{
+		// Top-left of square of the updated cell
 		const x = cellX * spacingWidth + offsetWidth;
 		const y = cellY * spacingHeight + offsetHeight;
 
+		// Clear out a 2x2 cell area around the cell
 		ctx.clearRect(
-			x - spacingWidth,            y - spacingHeight,
-			blockWidth + 2*spacingWidth, blockHeight + 2*spacingHeight
+			// top-left of the square on the top left cell
+			x - spacingWidth,
+			y - spacingHeight,
+			// until the bottom-right of the bottom right cell
+			// note that we add the dimensions of the square,
+			// not just those of the cells
+			blockWidth  + 2 * spacingWidth,
+			blockHeight + 2 * spacingHeight
 		);
 	}
 
@@ -160,22 +182,38 @@ function updatedDraw (cellX, cellY) {
 		}
 	}
 
-	drawLines(
-		Math.max(0, cellX-2), Math.max(0, cellY-2),
-		Math.min(widthInCells, cellX+4), Math.min(heightInCells, cellY+4)
-	);
+	{
+		offCtx.clearRect(0,0,offCanvas.width,offCanvas.height);
+
+		const x = cellX * spacingWidth + offsetWidth;
+		const y = cellY * spacingHeight + offsetHeight;
+
+		drawLines(
+			offCtx,
+			Math.max(0, cellX-2), Math.max(0, cellY-2),
+			Math.min(widthInCells, cellX+3), Math.min(heightInCells, cellY+3),
+			x - spacingWidth,
+			y - spacingHeight
+		);
+
+		ctx.drawImage(
+			offCanvas,
+			x - spacingWidth,
+			y - spacingHeight,
+		);
+	}
 }
 
-function drawLines (startX, startY, endX, endY) {
+function drawLines (target, startX, startY, endX, endY, moveX = 0, moveY = 0) {
 	const lines = marchingSquares(startX, startY, endX, endY);
-	ctx.lineWidth = 2;
-	ctx.strokeStyle = "#ccd";
-	ctx.beginPath();
+	target.lineWidth = 2;
+	target.strokeStyle = "#ccd";
+	target.beginPath();
 	for (let i = 0; i < lines.length; i += 4) {
-		ctx.moveTo(lines[i+0], lines[i+1]);
-		ctx.lineTo(lines[i+2], lines[i+3]);
+		target.moveTo(lines[i+0] - moveX, lines[i+1] - moveY);
+		target.lineTo(lines[i+2] - moveX, lines[i+3] - moveY);
 	}
-	ctx.stroke();
+	target.stroke();
 }
 
 canvas.addEventListener("click", function(evt){
