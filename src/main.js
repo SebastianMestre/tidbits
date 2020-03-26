@@ -51,7 +51,7 @@ function init () {
 		'S': S - S*I*infection*dt,
 		'I': I + S*I*infection*dt - I*recoveryRate*dt,
 		'R': R + I*recoveryRate*dt
-	}),
+	});
 
 	models.push(model({...SIRinit}, SIRstep, ({S}) => S, "#28f"));
 	models.push(model({...SIRinit}, SIRstep, ({I}) => I, "#a2f"));
