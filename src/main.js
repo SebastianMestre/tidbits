@@ -41,50 +41,21 @@ function init () {
 		"#0f0"
 	))
 
-	models.push(model(
-		{
-			'S': initialSusceptible,
-			'I': initialInfected,
-			'R': initialRemoved
-		},
-		({S,I,R}, dt) => ({
-			'S': S - S*I*infection*dt,
-			'I': I + S*I*infection*dt - I*recoveryRate*dt,
-			'R': R + I*recoveryRate*dt
-		}),
-		({I}) => I,
-		"#a2f"
-	));
+	const SIRinit = {
+		'S': initialSusceptible,
+		'I': initialInfected,
+		'R': initialRemoved
+	};
 
-	models.push(model(
-		{
-			'S': initialSusceptible,
-			'I': initialInfected,
-			'R': initialRemoved
-		},
-		({S,I,R}, dt) => ({
-			'S': S - S*I*infection*dt,
-			'I': I + S*I*infection*dt - I*recoveryRate*dt,
-			'R': R + I*recoveryRate*dt
-		}),
-		({R}) => R,
-		"#2fd"
-	));
+	const SIRstep = ({S,I,R}, dt) => ({
+		'S': S - S*I*infection*dt,
+		'I': I + S*I*infection*dt - I*recoveryRate*dt,
+		'R': R + I*recoveryRate*dt
+	}),
 
-	models.push(model(
-		{
-			'S': initialSusceptible,
-			'I': initialInfected,
-			'R': initialRemoved
-		},
-		({S,I,R}, dt) => ({
-			'S': S - S*I*infection*dt,
-			'I': I + S*I*infection*dt - I*recoveryRate*dt,
-			'R': R + I*recoveryRate*dt
-		}),
-		({S}) => S,
-		"#28f"
-	));
+	models.push(model({...SIRinit}, SIRstep, ({S}) => S, "#28f"));
+	models.push(model({...SIRinit}, SIRstep, ({I}) => I, "#a2f"));
+	models.push(model({...SIRinit}, SIRstep, ({R}) => R, "#2fd"));
 }
 
 // ******************
