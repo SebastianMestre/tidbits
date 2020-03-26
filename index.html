@@ -1,0 +1,40 @@
+<html>
+	<head>
+		<script async defer type="module" src="main.js">
+		</script>
+		<style>
+* {
+	margin: 0;
+	padding: 0;
+}
+canvas {
+	border:1px solid black;
+}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas" width="800" height="600"> </canvas>
+		<div>
+			<label>
+				duplicacion
+				<span id="duplicationDisplay">6.00</span>
+				<input type="range" min="2" max="9" step="0.001" value="6" id="duplicationSlider"/>
+			</label>
+			<label>
+				infectividad
+				<span id="infectivityDisplay">0.14</span>
+				<input type="range" min="0.01" max="0.3" step="0.001" value="0.139" id="infectivitySlider"/>
+			</label>
+			<label>
+				R0
+				<span id="r0Display">3.00</span>
+				<input type="range" min="1" max="5" step="0.001" value="3" id="r0Slider"/>
+			</label>
+			<label>
+				recovery
+				<span id="recoveryDisplay">0.05</span>
+				<input type="range" min="0.02" max="0.3" step="0.001" value="0.0463" id="recoverySlider"/>
+			</label>
+		</div>
+	</body>
+</html>
