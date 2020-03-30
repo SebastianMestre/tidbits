@@ -3,7 +3,7 @@ There are some simple ways to model pandemics based on differential equations.
 
 This repo contains some of those models, along with an interactive graph to play around with different values.
 
-[Check it out](./src)
+[Check it out](https://sebastianmestre.github.io/simple-pandemic-models/src)
 
 ![Screenshot of the program](./img/img1.png)
 
