@@ -221,17 +221,10 @@ function drawLines (target, startX, startY, endX, endY, moveX = 0, moveY = 0) {
 }
 
 canvas.addEventListener("click", function(evt){
-	let px = evt.pageX;
-	let py = evt.pageY;
 
-	let bounds = canvas.getBoundingClientRect();
+	let x = evt.offsetX;
+	let y = evt.offsetY;
 
-	let x = px - bounds.x;
-	let y = py - bounds.y;
-
-	if (x > bounds.width) return;
-	if (y > bounds.height) return;
-	
 	let cellX = Math.floor(x / widthInPixels * widthInCells);
 	let cellY = Math.floor(y / heightInPixels * heightInCells);
 
