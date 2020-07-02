@@ -28,9 +28,12 @@ const colorFromComplex = ({re, im}) => {
 
 	let angle = Math.atan2(re, im);
 
-	let g = (Math.sin((re**2 + im**2)**0.5) + 1) * 0.25 + 0.25;
+	const dist = (re**2 + im**2) ** 0.5;
+	let g = Math.log(dist + 1) % 1;
+	g *= 0.75;
+	g += 0.25;
 
-	return `hsl(${angle * 180 / Math.PI},70%,${g*50}%)`
+	return `hsl(${angle * 180 / Math.PI},100%,${g*50}%)`
 };
 
 let basePos = {x : 0, y : 0};
