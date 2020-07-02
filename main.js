@@ -6,11 +6,11 @@ const ctx = canvas.getContext("2d");
 ctx.fillStyle = "#666";
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-// (z - 1) * (z + 2 - i)^2 / (z^2 + 2 - 2i)
+// (z^2 - 1) * (z + 2 - i)^2 / (z^2 + 2 - 2i)
 const func = z =>
 	Cpx.over(
 		Cpx.times(
-			Cpx.minus(z, Cpx.real(1)),
+			Cpx.minus(Cpx.square(z), Cpx.real(1)),
 			Cpx.square(Cpx.plus(z, Cpx.comp(2, -1)))),
 		Cpx.plus(Cpx.square(z), Cpx.comp(2, -2)));
 
