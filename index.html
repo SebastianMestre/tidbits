@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<script async defer type="module" src="main.js"></script>
+<style>
+html {
+	background: rgb(128,128,128);
+}
+body {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: space-around;
+}
+canvas {
+	outline: 2px solid white;
+}
+</style>
+	</head>
+	<body>
+		<canvas draggable="true" id="canvas" width="500" height="500">
+			Sorry, your browser does not support HTML5 Canvas.
+		</canvas>
+		<br>
+		<input type="range" min="0" max="1", step="0.01" id="z-slider">
+	</body>
+</html>
