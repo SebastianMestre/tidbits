@@ -1,9 +1,12 @@
+const share = document.getElementById('ShareLink');
 const input = document.getElementById('MathInput');
 const output = document.getElementById('MathPreview');
 const update = function(){
 	const content = input.value.trim();
+	const encodedContent = encodeURI(content);
 	output.innerHTML = `$$${input.value.trim()}$$`;
-	window.location.hash = "#" + encodeURI(content);
+	window.location.hash = "#" + encodedContent;
+	share.innerHTML = `https://sebastianmestre.github.io/LaTeXView/#${encodedContent}`;
 	MathJax.texReset();
 	MathJax.typesetClear();
 	MathJax.typesetPromise([output]);
