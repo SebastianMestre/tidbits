@@ -4,7 +4,7 @@ const output = document.getElementById('MathPreview');
 const update = function(){
 	const content = input.value.trim();
 	const encodedContent = encodeURI(content);
-	output.innerHTML = `$$${input.value.trim()}$$`;
+	output.textContent = `$$${input.value.trim()}$$`;
 	window.location.hash = "#" + encodedContent;
 	share.innerHTML = `https://sebastianmestre.github.io/LaTeXView/#${encodedContent}`;
 	MathJax.texReset();
