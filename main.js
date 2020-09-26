@@ -11,9 +11,11 @@ const update = function(){
 
 	const content = input.value.trim();
 	const encodedContent = encodeURI(content);
-	output.textContent = `$$${input.value.trim()}$$`;
-	window.location.hash = "#" + encodedContent;
-	share.innerHTML = `https://sebastianmestre.github.io/LaTeXView/#${encodedContent}`;
+
+	output.textContent = `$$${content}$$`;
+	share.textContent = `https://sebastianmestre.github.io/LaTeXView/#${encodedContent}`;
+	window.history.replaceState({content : encodedContent}, "", `#${encodedContent}`);
+
 	MathJax.texReset();
 	MathJax.typesetClear();
 	MathJax.typesetPromise([output]);
