@@ -31,3 +31,9 @@ window.addEventListener("load", function(){
 
 	window.setInterval(update, 500);
 });
+
+window.addEventListener("hashchange", function(){
+	const content = window.location.hash.substr(1);
+	input.value = decodeURIComponent(content);
+	need_update = true;
+});
