@@ -13,7 +13,7 @@ const update = function(){
 	const encodedContent = encodeURI(content);
 
 	output.textContent = `$$${content}$$`;
-	share.textContent = `https://sebastianmestre.github.io/LaTeXView/#${encodedContent}`;
+	share.textContent = `https://sebastianmestre.github.io/Seem/#${encodedContent}`;
 	window.history.replaceState({content : encodedContent}, "", `#${encodedContent}`);
 
 	MathJax.texReset();
