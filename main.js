@@ -1,3 +1,5 @@
+import {LD, ST, SET, ADD, SUB, JL, JG, step, makeMachine} from './machine.js';
+
 const cnv = document.getElementById("canvas");
 const ctx = cnv.getContext("2d");
 
@@ -49,41 +51,6 @@ const draw = (machine, program) => {
 	drawInstructions(program, machine.state["PC"], 20, 20, 600);
 };
 
-
-
-const LD  = (dst, src1)       => ({ op: "LD",  dst, src1 });
-const ST  = (dst, src1)       => ({ op: "ST",  dst, src1 });
-const MOV = (dst, src1)       => ({ op: "MOV", dst, src1 });
-const SET = (dst, imm)        => ({ op: "SET", dst, imm });
-const ADD = (dst, src1, src2) => ({ op: "ADD", dst, src1, src2 });
-const SUB = (dst, src1, src2) => ({ op: "SUB", dst, src1, src2 });
-
-const JGE = (src1, imm)       => ({ op: "JGE", src1, imm });
-const JG  = (src1, imm)       => ({ op: "JG" , src1, imm });
-const JZ  = (src1, imm)       => ({ op: "JZ" , src1, imm });
-const JL  = (src1, imm)       => ({ op: "JL" , src1, imm });
-const JLE = (src1, imm)       => ({ op: "JLE", src1, imm });
-
-const instructions = {
-	"LD":  (machine, op) => { machine.state["PC"] += 1; machine.state[op.dst] = machine.memory[machine.state[op.src1]]; },
-	"ST":  (machine, op) => { machine.state["PC"] += 1; machine.memory[machine.state[op.dst]] = machine.state[op.src1]; },
-	"MOV": (machine, op) => { machine.state["PC"] += 1; machine.state[op.dst] = machine.state[op.src1]; },
-	"SET": (machine, op) => { machine.state["PC"] += 1; machine.state[op.dst] = op.imm; },
-	"ADD": (machine, op) => { machine.state["PC"] += 1; machine.state[op.dst] = machine.state[op.src1] + machine.state[op.src2]; },
-	"SUB": (machine, op) => { machine.state["PC"] += 1; machine.state[op.dst] = machine.state[op.src1] - machine.state[op.src2]; },
-
-	"JGE": (machine, op) => { machine.state["PC"] += 1; if (machine.state[op.src1] >= 0) machine.state["PC"] = op.imm; },
-	"JG":  (machine, op) => { machine.state["PC"] += 1; if (machine.state[op.src1] >  0) machine.state["PC"] = op.imm; },
-	"JZ":  (machine, op) => { machine.state["PC"] += 1; if (machine.state[op.src1] == 0) machine.state["PC"] = op.imm; },
-	"JL":  (machine, op) => { machine.state["PC"] += 1; if (machine.state[op.src1] <  0) machine.state["PC"] = op.imm; },
-	"JLE": (machine, op) => { machine.state["PC"] += 1; if (machine.state[op.src1] <= 0) machine.state["PC"] = op.imm; },
-};
-
-const step = (machine, program) => {
-	const op = program[machine.state["PC"]];
-	instructions[op.op](machine, op);
-};
-
 const shuffle = (array) => {
 	for(let i = array.length; i--;){
 		let r = Math.floor(Math.random() * (i+1));
@@ -95,14 +62,7 @@ const shuffle = (array) => {
 }
 
 const N = 10;
-const machine = {
-	state: {
-		A: 0, B: 0, C: 0, D: 0, E: 0, F: 0,
-		PC: 0,
-	},
-	memory: shuffle([...new Array(N)].map((x,i,a) => (i+1)/a.length)),
-	stack: [],
-}
+const machine = makeMachine(shuffle([...new Array(N)].map((x,i,a) => (i+1)/a.length)));
 
 // bubble sort
 const program = [
