@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script async defer type="module" src="main.js"></script>
+		<style>
+body {
+	display: flex;
+	flex-flow: column nowrap;
+	align-items: center;
+	background: #124;
+}
+#container-buttons {
+	display: flex;
+	flex-flow: column nowrap;
+	justify-content:space-around;
+}
+		</style>
+	</head>
+	<body>
+		<canvas width="800" height="600" id="canvas"></canvas>
+		<div id="container-buttons">
+			<button id="button-pause-play">play/pause</button>
+			<button id="button-step">step</button>
+			<button id="button-init">randomize</button>
+			<button id="button-clear">clear</button>
+		</div>
+	</body>
+</html>
