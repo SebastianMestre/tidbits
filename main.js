@@ -1,20 +1,7 @@
+import { BLOCK_COUNT, ACCENT_COLOR, BG_COLOR, FRAME_MILLIS, PRIMARY_LIGHT_COLOR, SECONDARY_LIGHT_COLOR, SECONDARY_DARK_COLOR } from './constants';
 
 cnv = document.getElementById("canvas");
 ctx = cnv.getContext("2d");
-
-const BG_COLOR = "#111";
-
-const PRIMARY_LIGHT_COLOR = "#0a3";
-const PRIMARY_DARK_COLOR = "#073";
-
-const SECONDARY_LIGHT_COLOR = "#f00";
-const SECONDARY_DARK_COLOR = "#333";
-
-const ACCENT_COLOR = "#ff0";
-
-const FRAME_MILLIS = 100;
-
-const BLOCK_COUNT = 38;
 
 const delay = (millis) => new Promise((success) => setTimeout(success, millis));
 
