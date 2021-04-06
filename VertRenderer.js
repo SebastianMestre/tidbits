@@ -1,4 +1,4 @@
-import { BLOCK_COUNT, ACCENT_COLOR, BG_COLOR } from './constants';
+import { BLOCK_COUNT, ACCENT_COLOR, BG_COLOR } from './constants.js';
 
 export class VertRenderer {
 	drawRect(height, arrayPos, padding) {

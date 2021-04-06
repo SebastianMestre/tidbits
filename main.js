@@ -1,10 +1,13 @@
-import { BLOCK_COUNT } from './constants';
-import { shuffle } from './utils';
-import { ScatterRenderer } from './ScatterRenderer';
-import { OperationManager } from './OperationManager';
+import { BLOCK_COUNT } from './constants.js';
+import { shuffle } from './utils.js';
+import { OperationManager } from './OperationManager.js';
 
-cnv = document.getElementById("canvas");
-ctx = cnv.getContext("2d");
+import { ScatterRenderer } from './ScatterRenderer.js';
+import { Renderer } from './Renderer.js';
+import { VertRenderer } from './VertRenderer.js';
+
+window.cnv = document.getElementById("canvas");
+window.ctx = cnv.getContext("2d");
 
 const insertionSort = (manager) => {
 	const n = manager.array.length;

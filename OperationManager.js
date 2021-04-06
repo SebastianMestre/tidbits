@@ -1,5 +1,5 @@
-import { ACCENT_COLOR, FRAME_MILLIS, PRIMARY_LIGHT_COLOR, SECONDARY_LIGHT_COLOR, SECONDARY_DARK_COLOR } from './constants';
-import { exchange, delay } from './utils';
+import { ACCENT_COLOR, FRAME_MILLIS, PRIMARY_LIGHT_COLOR, SECONDARY_LIGHT_COLOR, SECONDARY_DARK_COLOR } from './constants.js';
+import { exchange, delay } from './utils.js';
 
 const make_array = (data) => data.map(value => ({ value, state: 0, isHighlighted: false }));
 class Animator {
