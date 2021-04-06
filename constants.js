@@ -5,4 +5,4 @@ export const SECONDARY_LIGHT_COLOR = "#f00";
 export const SECONDARY_DARK_COLOR = "#333";
 export const ACCENT_COLOR = "#ff0";
 export const FRAME_MILLIS = 100;
-export const BLOCK_COUNT = 38;
+export const BLOCK_COUNT = 7;

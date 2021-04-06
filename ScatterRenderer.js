@@ -18,9 +18,8 @@ export class ScatterRenderer {
 	}
 
 	drawRect(value, arrayPos) {
-		const BLOCK_SIZE = 20;
-		// const BLOCK_SIZE = Math.floor(canvas.width / (BLOCK_COUNT + 2));
-		const SCREEN_BORDER = BLOCK_SIZE; // BLOCK_SIZE;
+		const BLOCK_SIZE = Math.floor(canvas.width / (BLOCK_COUNT + 2));
+		const SCREEN_BORDER = BLOCK_SIZE;
 
 		const FULL_X_SPACE = BLOCK_SIZE * BLOCK_COUNT;
 
@@ -28,7 +27,7 @@ export class ScatterRenderer {
 
 		const X_OFFSET = Math.floor((canvas.width - FULL_X_SPACE) / 2);
 
-		const PADDING = 0;
+		const PADDING = -BLOCK_SIZE/4;
 
 		const yPosLow = (value - 1) * VALUE_Y_RATIO;
 

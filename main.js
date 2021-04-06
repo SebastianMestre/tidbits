@@ -34,11 +34,12 @@ const insertionSort = (manager) => {
 };
 
 (async () => {
-	// const arr = [2,4,6,3,1,7,5];
-	const arr = shuffle([...Array(BLOCK_COUNT)].map((x, i) => i + 1));
-	const manager = new OperationManager(arr, new ScatterRenderer);
-
-	insertionSort(manager);
-
-	await manager.play();
+	const arr = [2,4,6,3,1,7,5];
+	// const arr = shuffle([...Array(BLOCK_COUNT)].map((x, i) => i + 1));
+	const renderers = [new Renderer, new VertRenderer, new ScatterRenderer];
+	while (true) for (const renderer of renderers) {
+		const manager = new OperationManager([...arr], renderer);
+		insertionSort(manager);
+		await manager.play();
+	}
 })();
