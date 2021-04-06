@@ -12,19 +12,19 @@ const SECONDARY_DARK_COLOR = "#333";
 
 const ACCENT_COLOR = "#ff0";
 
-const FRAME_MILLIS = 500;
+const FRAME_MILLIS = 100;
 
-const BLOCK_COUNT = 15;
+const BLOCK_COUNT = 38;
 
 const delay = (millis) => new Promise((success) => setTimeout(success, millis));
 
-const make_array = (data) => data.map(value => ({value, state: 0}));
+const make_array = (data) => data.map(value => ({value, state: 0, isHighlighted: false}));
 
 const exchange = (arr, i, j) => {
 	const temp = arr[i];
 	arr[i] = arr[j];
 	arr[j] = temp;
-}
+};
 
 const shuffle = arr => {
 	for(let i = arr.length; i-->0;){
@@ -34,9 +34,8 @@ const shuffle = arr => {
 	return arr;
 };
 
-
 class Renderer {
-	drawRect(height, arrayPos, padding = 0) {
+	drawRect(height, arrayPos, padding) {
 		const BLOCK_X_SIZE = Math.floor(canvas.width / BLOCK_COUNT / 4);
 		const BLOCK_X_MARGIN = BLOCK_X_SIZE * 3;
 
@@ -60,10 +59,25 @@ class Renderer {
 			BLOCK_X_SIZE + 2*padding,
 			pxHeight     + 2*padding);
 	}
-};
+
+	drawElement(value, position, isHighlighted = false) {
+		if (isHighlighted) {
+			const oldColor = ctx.fillStyle;
+			ctx.fillStyle = ACCENT_COLOR;
+			this.drawRect(value, position, 1);
+			ctx.fillStyle = oldColor;
+		}
+		this.drawRect(value, position, 0);
+	}
+
+	fillBackground () {
+		ctx.fillStyle = BG_COLOR;
+		ctx.fillRect(0, 0, cnv.width, cnv.height);
+	}
+}
 
 class VertRenderer {
-	drawRect(height, arrayPos, padding = 0) {
+	drawRect(height, arrayPos, padding) {
 		const BLOCK_Y_SIZE = Math.floor(canvas.height / BLOCK_COUNT / 4);
 		const BLOCK_Y_MARGIN = BLOCK_Y_SIZE * 3;
 
@@ -85,6 +99,64 @@ class VertRenderer {
 			yPos         -   padding,
 			xSize        + 2*padding,
 			BLOCK_Y_SIZE + 2*padding);
+	}
+
+	drawElement(value, position, isHighlighted = false) {
+		if (isHighlighted) {
+			const oldColor = ctx.fillStyle;
+			ctx.fillStyle = ACCENT_COLOR;
+			this.drawRect(value, position, 1);
+			ctx.fillStyle = oldColor;
+		}
+		this.drawRect(value, position, 0);
+	}
+
+	fillBackground () {
+		ctx.fillStyle = BG_COLOR;
+		ctx.fillRect(0, 0, cnv.width, cnv.height);
+	}
+}
+
+class ScatterRenderer {
+	drawElement(value, position, isHighlighted = false) {
+		if (isHighlighted) {
+			const oldColor = ctx.fillStyle;
+			ctx.fillStyle = ACCENT_COLOR;
+			this.drawRect(value, position);
+			ctx.fillStyle = oldColor;
+		} else {
+			this.drawRect(value, position);
+		}
+	}
+
+	fillBackground () {
+		ctx.fillStyle = BG_COLOR;
+		ctx.fillRect(0, 0, cnv.width, cnv.height);
+	}
+
+	drawRect(value, arrayPos) {
+		const BLOCK_SIZE = 20;
+		// const BLOCK_SIZE = Math.floor(canvas.width / (BLOCK_COUNT + 2));
+		const SCREEN_BORDER = BLOCK_SIZE; // BLOCK_SIZE;
+
+		const FULL_X_SPACE = BLOCK_SIZE * BLOCK_COUNT;
+
+		const VALUE_Y_RATIO = (canvas.height - 2 * SCREEN_BORDER - BLOCK_SIZE) / (BLOCK_COUNT - 1);
+
+		const X_OFFSET = Math.floor((canvas.width - FULL_X_SPACE) / 2);
+
+		const PADDING = 0;
+
+		const yPosLow = (value - 1) * VALUE_Y_RATIO;
+
+		let xPos = X_OFFSET + arrayPos * BLOCK_SIZE;
+		const yPos = Math.floor(cnv.height - SCREEN_BORDER - yPosLow - BLOCK_SIZE);
+
+		ctx.fillRect(
+			xPos       -   PADDING,
+			yPos       -   PADDING,
+			BLOCK_SIZE + 2*PADDING,
+			BLOCK_SIZE + 2*PADDING);
 	}
 }
 
@@ -139,11 +211,11 @@ class Animator {
 
 	async compareVisual(i, j) {
 		this.fillBackground();
-		ctx.fillStyle = ACCENT_COLOR;
-		this.drawRect(i, 1);
-		this.drawRect(j, 1);
-		ctx.fillStyle = PRIMARY_LIGHT_COLOR;
+		this.backingArray[i].isHighlighted = true;
+		this.backingArray[j].isHighlighted = true;
 		this.drawArray();
+		this.backingArray[i].isHighlighted = false;
+		this.backingArray[j].isHighlighted = false;
 		await delay(FRAME_MILLIS);
 	}
 
@@ -170,18 +242,17 @@ class Animator {
 			const xPosj = j * (1-t) + i * t;
 
 			ctx.fillStyle = this.colorFromState(this.backingArray[i].state);
-			this.renderer.drawRect(this.backingArray[i].value, xPosi);
+			this.renderer.drawElement(this.backingArray[i].value, xPosi);
 
 			ctx.fillStyle = this.colorFromState(this.backingArray[j].state);
-			this.renderer.drawRect(this.backingArray[j].value, xPosj);
+			this.renderer.drawElement(this.backingArray[j].value, xPosj);
 
 			await delay(timeStep);
 		}
 	}
 
 	fillBackground () {
-		ctx.fillStyle = BG_COLOR;
-		ctx.fillRect(0, 0, cnv.width, cnv.height);
+		this.renderer.fillBackground()
 	}
 
 	drawArray () {
@@ -193,7 +264,7 @@ class Animator {
 	drawItem (i) {
 		const item = this.backingArray[i];
 		ctx.fillStyle = this.colorFromState(item.state);
-		this.drawRect(i);
+		this.drawRect(i, item.isHighlighted);
 	}
 
 	colorFromState(state) {
@@ -204,9 +275,9 @@ class Animator {
 			: ACCENT_COLOR;
 	}
 
-	drawRect (i, padding = 0) {
+	drawRect (i, isHighlighted = false) {
 		const value = this.backingArray[i].value;
-		this.renderer.drawRect(value, i, padding);
+		this.renderer.drawElement(value, i, isHighlighted);
 	}
 }
 
@@ -280,7 +351,7 @@ const insertionSort = (manager) => {
 (async () => {
 	// const arr = [2,4,6,3,1,7,5];
 	const arr = shuffle([...Array(BLOCK_COUNT)].map((x,i)=>i+1));
-	const manager = new OperationManager(arr, new VertRenderer);
+	const manager = new OperationManager(arr, new ScatterRenderer);
 
 	insertionSort(manager);
 
