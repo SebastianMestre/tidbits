@@ -1,0 +1,91 @@
+<span id=elapsed>0</span>
+<span id=remains>0</span>
+<div>
+<input id=work type=number value=25>
+<input id=rest type=number value=5>
+</div>
+<style>
+body {
+	display:flex;
+	flex-flow:column nowrap;
+	align-items:center;
+	justify-content:space-around;
+	height: 100vh;
+	margin: 0;
+}
+* {
+	font-family: sans-serif;
+}
+#elapsed, #remains {
+	font-size: 40pt;
+}
+#elapsed::before {
+	content: "elapsed: ";
+}
+#remains::before {
+	content: "remains: ";
+}
+</style>
+<script src="audio.js"></script>
+<script>
+
+const seconds = 1000;
+const minutes = 60 * seconds;
+
+let workTime = 25 * minutes;
+let restTime = 5 * minutes;
+
+work.addEventListener("change", () => { workTime = Number(work.value) * minutes; });
+rest.addEventListener("change", () => { restTime = Number(rest.value) * minutes; });
+
+const toClockTime = millis => {
+	const seconds = millis / 1000;
+
+	const minutes = Math.floor(seconds / 60);
+	const spareSeconds = Math.floor(seconds - minutes * 60);
+
+	return `${minutes}:${spareSeconds}`;
+};
+
+const interval = 0.9 * seconds;
+let mode = "work";
+let elapsedTime = 0;
+setInterval(() => {
+	elapsedTime += interval;
+
+	let remainsTime;
+
+	if (mode == "work") {
+		if (elapsedTime >= workTime) {
+			elapsedTime = 0;
+			mode = "rest";
+
+			document.body.style.background = "#37f";
+
+			beep(500);
+		}
+	} else if (mode == "rest") {
+		if (elapsedTime >= restTime) {
+			elapsedTime = 0;
+			remainsTime = workTime;
+			mode = "work";
+
+			document.body.style.background = "#999";
+
+			beep(500);
+		}
+	}
+
+	if (mode == "work") {
+		remainsTime = workTime - elapsedTime;
+	} else if (mode == "rest") {
+		remainsTime = restTime - elapsedTime;
+	}
+
+	elapsed.innerHTML = toClockTime(elapsedTime);
+	remains.innerHTML = toClockTime(remainsTime);
+}, interval);
+
+document.body.style.background = "#999";
+
+</script>
