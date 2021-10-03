@@ -1,38 +1,29 @@
 // taken from https://stackoverflow.com/a/13194087/10184103
-var beep = (function () {
-    var ctxClass = window.audioContext ||window.AudioContext || window.AudioContext || window.webkitAudioContext
-    var ctx = new ctxClass();
-    return function (duration, type, finishedCallback) {
 
-        duration = +duration;
+var ctxClass = window.audioContext ||window.AudioContext || window.AudioContext || window.webkitAudioContext
+var ctx = new ctxClass();
 
-        // Only 0-4 are valid types.
-        type = (type % 5) || 0;
+var osc = ctx.createOscillator();
+osc.type = 0;
+osc.connect(ctx.destination);
 
-        if (typeof finishedCallback != "function") {
-            finishedCallback = function () {};
-        }
 
-        var osc = ctx.createOscillator();
-
-        osc.type = type;
-        //osc.type = "sine";
-
-        osc.connect(ctx.destination);
-        if (osc.noteOn) osc.noteOn(0); // old browsers
-        if (osc.start) osc.start(); // new browsers
-
-        setTimeout(function () {
-            if (osc.noteOff) osc.noteOff(0); // old browsers
-            if (osc.stop) osc.stop(); // new browsers
-            finishedCallback();
-        }, duration);
-
-    };
-})();
-
-var freq = Number(frecelem.value);
+setFreq(frecelem.value);
 frecelem.addEventListener("change", e=>{
-    freq = Number(frecelem.value);
-    beep(3000, 0, ()=>{});
+    setFreq(frecelem.value);
 });
+
+function setFreq(f){
+    osc.frequency.setValueAtTime(
+        Number(f), ctx.currentTime);
+}
+
+function startSound(){
+    if (osc.noteOn) osc.noteOn(0); // old browsers
+    if (osc.start) osc.start(); // new browsers
+}
+
+function stopSound(){
+    if (osc.noteOff) osc.noteOff(0); // old browsers
+    if (osc.stop) osc.stop(); // new browsers
+}
