@@ -13,6 +13,15 @@ frecelem.addEventListener("change", e=>{
     setFreq(frecelem.value);
 });
 
+stopbtn.addEventListener("click", e=>{
+    stopSound();
+});
+
+startbtn.addEventListener("click", e=>{
+    startSound();
+});
+
+
 function setFreq(f){
     osc.frequency.setValueAtTime(
         Number(f), ctx.currentTime);
