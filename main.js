@@ -30,3 +30,9 @@ var beep = (function () {
 
     };
 })();
+
+var freq = Number(frecelem.value);
+frecelem.addEventListener("change", e=>{
+    freq = Number(frecelem.value);
+    beep(3000, 0, ()=>{});
+});
