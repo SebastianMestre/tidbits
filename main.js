@@ -10,6 +10,7 @@ let time = 0;
 let sorting = false;
 let automatico = true;
 let viewMode = "array";
+let parallel = true;
 
 const COMPARE_MS = 200;
 const SWAP_MS = 300;
@@ -225,6 +226,10 @@ function readNetwork() {
 }
 
 function collapseNetwork(network) {
+	if (!parallel) {
+		return network.map(cmp => [cmp]);
+	}
+
 	const times = [];
 	for (let i = 0; i < N; ++i) {
 		times.push(-1);
@@ -289,6 +294,12 @@ function updateAutomaticState(state) {
 	automatico = state;
 }
 
+function updateParallelState(state) {
+	parallel = state;
+	readNetwork();
+	dibujar();
+}
+
 function updateViewMode(mode) {
 	viewMode = mode;
 }
@@ -314,6 +325,14 @@ function shuffleBtnClicked() {
 }
 
 
+function parallelBtnClicked(evt) {
+	updateParallelState(evt.target.checked);
+}
+
+init();
+readNetwork();
+dibujar();
+
 document.getElementById("mezclar-btn").addEventListener("click", shuffleBtnClicked);
 document.getElementById("update-btn").addEventListener("click", updateBtnClicked);
 document.getElementById("correr-btn").addEventListener("click", sortBtnClicked);
@@ -326,9 +345,10 @@ const automaticBtn = document.getElementById("automatic-btn");
 automaticBtn.addEventListener("click", automaticBtnClicked);
 updateAutomaticState(automaticBtn.checked);
 
-readNetwork();
-init();
-dibujar();
+const parallelBtn = document.getElementById("parallel-btn");
+parallelBtn.addEventListener("click", parallelBtnClicked);
+updateParallelState(parallelBtn.checked);
+
 
 function runAutomatico() {
 	if (automatico) {
@@ -340,4 +360,4 @@ function runAutomatico() {
 
 
 runAutomatico();
-setInterval(runAutomatico, 6000);
+setInterval(runAutomatico, 10000);
