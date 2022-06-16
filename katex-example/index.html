@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+		<script src="mathjax-config.js"></script>
+		<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+		<script async defer src="main.js"></script>
+		<style>
+			body #MathInput {
+				width: 100%;
+			}
+			body #MathPreview {
+				width: 100%;
+			}
+			body #ShareLink {
+				width: 100%;
+				background: #eee;
+				padding: 0.5em;
+				border: 1px solid #ddd;
+				overflow: auto;
+			}
+			body {
+				position: relative;
+				width: 60ch;
+				margin: 0 auto;
+				margin-top: 3em;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Write in LaTeX math notation:</p>
+		<textarea id="MathInput">f(x)=x^2\exp(x)</textarea>
+		<p>Preview the result live:</p>
+		<div id="MathPreview" class="preview"></div>
+		<p>Share your formula with others:</p>
+		<div id="ShareLink"></div>
+	</body>
+</html>
