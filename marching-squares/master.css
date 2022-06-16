@@ -1,0 +1,47 @@
+
+:root {
+	--background: #002626;
+	--foreground: #0e4749;
+	--text: #efe7da;
+}
+
+body{
+	display:flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: var(--background);
+	height: 100vh;
+	margin: 0;
+}
+
+#canvas{
+	background: var(--foreground);
+	box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+	border-radius: 2px;
+	
+	max-width: 100vw;
+	max-height: 100vh;
+}
+
+.message-box {
+	background: var(--foreground);
+	padding: 1em;
+	margin: 1em;
+	border-radius: 2px;
+	box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+	
+	color: var(--text);
+	font-family: sans-serif;
+}
+
+.gh-link {
+	position: fixed;
+	top: 0;
+	right: 0;
+}
+
+.gh-link a {
+	color: var(--text);
+	text-decoration: underline;
+}

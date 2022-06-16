@@ -1,0 +1,28 @@
+
+.tip {
+	position: fixed;
+	top: 0;
+	left: 0;
+
+	opacity: 1;
+	transition: opacity 0.3s;
+}
+
+.tip-button {
+	color: var(--text);
+	background: var(--foreground);
+	border: 2px solid var(--text);
+	border-radius: 4px;
+	padding: 0.5em;
+
+	transition: 0.3s;
+
+	cursor: pointer;
+	outline: none;
+}
+
+.tip-button:hover {
+	color: var(--foreground);
+	background: var(--text);
+	border: 2px solid var(--text);
+}
