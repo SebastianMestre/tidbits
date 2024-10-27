@@ -1,6 +1,6 @@
 
-const base_ray_count = 16;
-const cascade_count = 4;
+const base_ray_count = 4;
+const cascade_count = 5;
 let gw,gh;
 let cascades;
 
@@ -147,7 +147,7 @@ function is_wall(x, y) {
 function trace(x, y, dx, dy, start_distance, end_distance) {
 	let c = [0,0,0,0,0];
 
-	const stride = 0.01;
+	const stride = 0.0016;
 
 	let hit = false;
 	let walked = start_distance;
@@ -166,7 +166,7 @@ function trace(x, y, dx, dy, start_distance, end_distance) {
 
 	c[side] += 1;
 
-	return [c[0]+c[3], c[1]+c[3], c[2]+c[3], Number(!hit)];
+	return [c[0], c[1], c[0]+c[1], Number(!hit)];
 }
 
 function color(x, y) {
