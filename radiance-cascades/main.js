@@ -1,27 +1,29 @@
 
 const base_ray_count = 4;
-const cascade_count = 5;
-let gw,gh;
+const cascade_count = 6;
+let gw, gh;
 let cascades;
 
 function init(w, h) {
 
 	gw = w;
 	gh = h;
-	cascades = [];
+	cascades = Array.from({length: cascade_count}, () => null);
 
 	const start = performance.now();
 
-	const base_dist = 1 / (4 ** cascade_count - 1);
+	const base_dist = 1.5 / 4 ** cascade_count;
 	console.log("base_dist", base_dist);
 
-	for (let level = 0; level < cascade_count; ++level) {
-		const cw = w >> level;
-		const ch = h >> level;
+	for (let level = cascade_count-1; level >= 0; --level) {
+
+		const probe_size = 1 << level;
+		const cw = (w + probe_size - 1) >> level;
+		const ch = (h + probe_size - 1) >> level;
 		const ray_count = base_ray_count << (2*level);
 
-		const grid = Array.from({length:(cw+1)*(ch+1)*ray_count*4}, () => 0);
-		cascades.push(grid);
+		const grid = Array.from({length:cw*ch*ray_count*4}, () => 0);
+		cascades[level] = grid;
 
 		const dx = [];
 		const dy = [];
@@ -30,51 +32,55 @@ function init(w, h) {
 			dy.push(Math.sin(2 * Math.PI / ray_count * (i + 0.5)));
 		}
 
-		const start_dist = base_dist * 4 **  level      - base_dist;
-		const end_dist   = base_dist * 4 ** (level + 1) - base_dist;
+		const start_dist = level == 0 ? 0 : base_dist * 4 **  level;
+		const end_dist   =                  base_dist * 4 ** (level + 1);
 
-		for (let i = 0; i <= ch; ++i) {
-			for (let j = 0; j <= cw; ++j) {
+		for (let i = 0; i < ch; ++i) {
+			for (let j = 0; j < cw; ++j) {
 
-				const x = (j + 0.5) / cw;
-				const y = 1 - (i + 0.5) / ch;
+				const x =     (j + 0.5) * probe_size / w;
+				const y = 1 - (i + 0.5) * probe_size / h;
+
+				const probe_idx_premul = (i * cw + j) * ray_count;
 
 				for (let k = 0; k < ray_count; ++k) {
 
+					const ray_idx_premul = (probe_idx_premul + k) * 4;
 					const t = trace(x, y, dx[k], dy[k], start_dist, end_dist);
 
 					for (let c = 0; c < 4; ++c) {
-						put(level, i, j, k, c, t[c]);
+						cascades[level][ray_idx_premul + c] = t[c];
 					}
 				}
 			}
 		}
-	}
 
-	for (let level = cascade_count - 2; level >= 0; --level) {
+		if (level == cascade_count-1) continue;
 
-		const cw = w >> level;
-		const ch = h >> level;
-		const ray_count = base_ray_count << (2*level);
-
-		const ncw = w >> (level + 1);
-		const nch = h >> (level + 1);
+		const nprobe_size = 1 << (level + 1);
+		const ncw = (w + nprobe_size - 1) >> (level + 1);
+		const nch = (h + nprobe_size - 1) >> (level + 1);
 		const nray_count = base_ray_count << (2*(level + 1));
 
-		for (let i = 0; i <= ch; ++i) {
-			for (let j = 0; j <= cw; ++j) {
+		for (let i = 0; i < ch; ++i) {
+			for (let j = 0; j < cw; ++j) {
+
+				const probe_idx_premul = (i * cw + j) * ray_count;
 
 				// image-space position
-				const x =     (j + 0.5) / cw;
-				const y = 1 - (i + 0.5) / ch;
+				const x =     (j + 0.5) * probe_size / w;
+				const y = 1 - (i + 0.5) * probe_size / h;
 
 				// top-left sample in next cascade
-				const nj = Math.floor(     x  * ncw - 0.5);
-				const ni = Math.floor((1 - y) * nch - 0.5);
+				const nj = ((j + 1) >> 1) - 1;
+				const ni = ((i + 1) >> 1) - 1;
+
+				const nx =     (nj + 0.5) * nprobe_size / w;
+				const ny = 1 - (ni + 0.5) * nprobe_size / h;
 
 				// sample-space distance to top-left sample
-				const ex = (x - (nj+0.5)/ncw    ) * ncw;
-				const ey = ((1-(ni+0.5)/nch) - y) * nch;
+				const ex = (x - nx) * w / nprobe_size;
+				const ey = (ny - y) * h / nprobe_size;
 
 				// linear interpolation coeficients
 				const cf = [(1-ex)*(1-ey), ex*(1-ey), (1-ex)*ey, ex*ey];
@@ -83,51 +89,27 @@ function init(w, h) {
 				const di = [0, 0, 1, 1];
 				const dj = [0, 1, 0, 1];
 
-
 				for (let k = 0; k < ray_count; ++k) {
-					const alpha = get(level, i, j, k, 3);
+					const ray_idx_premul = (probe_idx_premul + k) * 4;
+					const alpha = cascades[level][ray_idx_premul + 3];
 
 					for (let dk = 0; dk < 4; ++dk) {
 						const nk = 4 * k + dk;
 
 						for (let dp = 0; dp < 4; ++dp) {
-							const nii = Math.max(0, Math.min(nch, ni + di[dp]));
-							const njj = Math.max(0, Math.min(ncw, nj + dj[dp]));
+							const nii = Math.max(0, Math.min(nch-1, ni + di[dp]));
+							const njj = Math.max(0, Math.min(ncw-1, nj + dj[dp]));
+							const nray_idx_premul = ((nii * ncw + njj) * nray_count + nk) * 4;
+							const coef = cf[dp] * alpha * 0.25;
 
 							for (let c = 0; c < 3; ++c) {
-								const val = get(level+1, nii, njj, nk, c);
-								add(level, i, j, k, c, val * alpha * 0.25 * cf[dp]);
+								cascades[level][ray_idx_premul + c] += cascades[level+1][nray_idx_premul + c] * coef;
 							}
 						}
-
 					}
 				}
 			}
 		}
-	}
-
-	function get(level, i, j, k, c) {
-		const cw = w >> level;
-		const ray_count = base_ray_count << (2*level);
-		const ray_idx = (i * (cw+1) + j) * ray_count + k;
-		const idx = ray_idx * 4 + c;
-		return cascades[level][idx];
-	}
-
-	function put(level, i, j, k, c, x) {
-		const cw = w >> level;
-		const ray_count = base_ray_count << (2*level);
-		const ray_idx = (i * (cw+1) + j) * ray_count + k;
-		const idx = ray_idx * 4 + c;
-		cascades[level][idx] = x;
-	}
-
-	function add(level, i, j, k, c, x) {
-		const cw = w >> level;
-		const ray_count = base_ray_count << (2*level);
-		const ray_idx = (i * (cw+1) + j) * ray_count + k;
-		const idx = ray_idx * 4 + c;
-		cascades[level][idx] += x;
 	}
 
 	const ending = performance.now();
@@ -166,7 +148,7 @@ function trace(x, y, dx, dy, start_distance, end_distance) {
 
 	c[side] += 1;
 
-	return [c[0], c[1], c[0]+c[1], Number(!hit)];
+	return [c[0]+c[3], c[1]+c[3], c[2]+c[3], Number(!hit)];
 }
 
 function color(x, y) {
@@ -180,7 +162,7 @@ function color(x, y) {
 	const ray_count = base_ray_count << (2*level);
 	for (let k = 0; k < ray_count; ++k) {
 		for (let c = 0; c < 3; ++c) {
-			const idx = ((i * (cw+1) + j) * ray_count + k) * 4 + c;
+			const idx = ((i * cw + j) * ray_count + k) * 4 + c;
 			out[c] += cascades[level][idx];
 		}
 	}
