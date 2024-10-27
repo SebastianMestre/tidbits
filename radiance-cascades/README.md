@@ -1,5 +1,5 @@
 # Radiance Cascades
 
-2D diffuse raymarched area lights using radiance cascades, not optimized.
+2D diffuse raymarched area lights using radiance cascades. Dog slow, not optimized.
 
 ![](img/cascades.png)

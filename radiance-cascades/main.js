@@ -1,6 +1,6 @@
 
 const base_ray_count = 16;
-const cascade_count = 5;
+const cascade_count = 4;
 let gw,gh;
 let cascades;
 
