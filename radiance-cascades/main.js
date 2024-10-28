@@ -10,10 +10,9 @@ function init(w, h) {
 	gh = h;
 	cascades = Array.from({length: cascade_count}, () => null);
 
-	const start = performance.now();
+	const base_dist = 1.5 / 4 ** cascade_count;
 
-	const base_dist = 1.5 / 3 ** cascade_count;
-	console.log("base_dist", base_dist);
+	const total_start = performance.now();
 
 	for (let level = cascade_count-1; level >= 0; --level) {
 
@@ -32,8 +31,10 @@ function init(w, h) {
 			dy.push(Math.sin(2 * Math.PI / ray_count * (i + 0.5)));
 		}
 
-		const start_dist = level == 0 ? 0 : base_dist * 3 **  level;
-		const end_dist   =                  base_dist * 3 ** (level + 1);
+		const start_dist = level == 0 ? 0 : base_dist * 4 **  level;
+		const end_dist   =                  base_dist * 4 ** (level + 1);
+
+		// const tracing_start = performance.now();
 
 		for (let i = 0; i < ch; ++i) {
 			for (let j = 0; j < cw; ++j) {
@@ -49,72 +50,79 @@ function init(w, h) {
 					const t = trace(x, y, dx[k], dy[k], start_dist, end_dist);
 
 					for (let c = 0; c < 4; ++c) {
-						cascades[level][ray_idx_premul + c] = t[c];
+						grid[ray_idx_premul + c] = t[c];
 					}
 				}
 			}
 		}
 
+		// const tracing_ending = performance.now();
+
 		if (level == cascade_count-1) continue;
 
+		const ngrid = cascades[level+1];
 		const nprobe_size = 1 << (level + 1);
 		const ncw = (w + nprobe_size - 1) >> (level + 1);
 		const nch = (h + nprobe_size - 1) >> (level + 1);
 		const nray_count = base_ray_count << (2*(level + 1));
+
+		// index offsets for gathering neighboring probes
+		const di = [0, 0, 1, 1];
+		const dj = [0, 1, 0, 1];
+
+		// linear interpolation coeficients
+		const coefficients = [
+			[ 0.0625, 0.1875, 0.1875, 0.5625 ],
+			[ 0.1875, 0.0625, 0.5625, 0.1875 ],
+			[ 0.1875, 0.5625, 0.0625, 0.1875 ],
+			[ 0.5625, 0.1875, 0.1875, 0.0625 ],
+		];
+
+		// const gather_start = performance.now();
 
 		for (let i = 0; i < ch; ++i) {
 			for (let j = 0; j < cw; ++j) {
 
 				const probe_idx_premul = (i * cw + j) * ray_count;
 
-				// image-space position of the current probe
-				const x =     (j + 0.5) * probe_size / w;
-				const y = 1 - (i + 0.5) * probe_size / h;
-
 				// top-left probe in next cascade
 				const nj = ((j + 1) >> 1) - 1;
 				const ni = ((i + 1) >> 1) - 1;
 
-				// image space position of probe in the next cascade
-				const nx =     (nj + 0.5) * nprobe_size / w;
-				const ny = 1 - (ni + 0.5) * nprobe_size / h;
-
-				// sample-space distance to top-left probe
-				const ex = (x - nx) * w / nprobe_size;
-				const ey = (ny - y) * h / nprobe_size;
-
-				// linear interpolation coeficients
-				const cf = [(1-ex)*(1-ey), ex*(1-ey), (1-ex)*ey, ex*ey];
-
-				// index offsets for gathering neighboring samples
-				const di = [0, 0, 1, 1];
-				const dj = [0, 1, 0, 1];
+				const cf = coefficients[((i&1)<<1)|(j&1)];
 
 				for (let k = 0; k < ray_count; ++k) {
 					const ray_idx_premul = (probe_idx_premul + k) * 4;
-					const alpha = cascades[level][ray_idx_premul + 3];
-
-					for (let dk = 0; dk < 4; ++dk) {
-						const nk = 4 * k + dk;
-
-						for (let dp = 0; dp < 4; ++dp) {
-							const nii = Math.max(0, Math.min(nch-1, ni + di[dp]));
-							const njj = Math.max(0, Math.min(ncw-1, nj + dj[dp]));
-							const nray_idx_premul = ((nii * ncw + njj) * nray_count + nk) * 4;
-							const coef = cf[dp] * alpha * 0.25;
+					const alpha = grid[ray_idx_premul + 3];
+					for (let dp = 0; dp < 4; ++dp) {
+						const nii = Math.max(0, Math.min(nch-1, ni + di[dp]));
+						const njj = Math.max(0, Math.min(ncw-1, nj + dj[dp]));
+						const nprobe_idx_premul = (nii * ncw + njj) * nray_count;
+						const coef = cf[dp] * alpha * 0.25;
+						for (let dk = 0; dk < 4; ++dk) {
+							const nk = 4 * k + dk;
+							const nray_idx_premul = (nprobe_idx_premul + nk) * 4;
 
 							for (let c = 0; c < 3; ++c) {
-								cascades[level][ray_idx_premul + c] += cascades[level+1][nray_idx_premul + c] * coef;
+								grid[ray_idx_premul + c] += ngrid[nray_idx_premul + c] * coef;
 							}
 						}
 					}
 				}
 			}
 		}
+
+		// const gather_ending = performance.now();
+
+		// console.log("did tracing in", tracing_ending - tracing_start, "ms", "and gathering in", gather_ending - gather_start, "ms");
 	}
 
-	const ending = performance.now();
-	console.log("precomputed radiance cascade in", ending - start, "milliseconds");
+
+	const total_ending = performance.now();
+
+	console.log("did initialization in", total_ending - total_start, "ms");
+
+
 }
 
 // returns radiance in [r,g,b] 0..1 format
@@ -134,7 +142,7 @@ function trace(x, y, dx, dy, start_distance, end_distance) {
 		if (yy > 1) { hit = true; side = 3; break; }
 
 		const d = sdf(xx, yy);
-		if (d < 0.001) { hit = true; side = 4; break; }
+		if (d < 0.002) { hit = true; side = 4; break; }
 
 		walked += d;
 		if (walked > end_distance) { side = 4; break; }
@@ -155,20 +163,26 @@ function color(x, y) {
 	const out = [0,0,0];
 
 	const level = 0;
-	const cw = gw >> level;
-	const ch = gh >> level;
+	const probe_size = 1 << level;
+	const cw = (gw + probe_size - 1) >> level;
+	const ch = (gh + probe_size - 1) >> level;
+	const grid = cascades[level];
 	const j = Math.floor(x * cw);
 	const i = Math.floor((1 - y) * ch);
 	const ray_count = base_ray_count << (2*level);
+	const probe_idx_premul = (i * cw + j) * ray_count;
 	for (let k = 0; k < ray_count; ++k) {
+		const ray_idx_premul = (probe_idx_premul + k) * 4;
 		for (let c = 0; c < 3; ++c) {
-			const idx = ((i * cw + j) * ray_count + k) * 4 + c;
-			out[c] += cascades[level][idx];
+			const idx = ray_idx_premul + c;
+			out[c] += grid[idx];
 		}
 	}
 
 	for (let c = 0; c < 3; ++c) {
-		out[c] = 255 * (out[c] / ray_count) ** 0.45;
+		out[c] /= ray_count;
+		out[c] = out[c] / (out[c] + 1);
+		out[c] = 255 * out[c] ** 0.45;
 	}
 
 	return out;
