@@ -1,42 +1,76 @@
-<span id=elapsed>0</span>
-<span id=remains>0</span>
-<div>
+<span id=remains>25:00</span>
+<span id="mode">work</span>
+<div class=controls>
 <input id=work type=number value=25>
 <input id=rest type=number value=5>
+<button id=start>⏯</button>
+<button id=reset>⏮</button>
+<button id=skip>⏭</button>
 </div>
+
 <style>
+:root {
+	font-size: 12pt;
+}
+.controls {
+	background: #fff;
+	display: flex;
+	flex-flow: column nowrap;
+	padding: 5px;
+	gap: 5px;
+	border-radius: 11px;
+	border: 1px solid #000000;
+}
 body {
 	display:flex;
 	flex-flow:column nowrap;
 	align-items:center;
-	justify-content:space-around;
+	justify-content:start;
 	height: 100vh;
 	margin: 0;
 }
 * {
 	font-family: sans-serif;
+	font-size: 1rem;
 }
 #elapsed, #remains {
-	font-size: 40pt;
+	font-size: 3.5rem;
+	margin-bottom: 1rem;
+	margin-top: 3.5rem;
 }
-#elapsed::before {
-	content: "elapsed: ";
+#mode {
+	font-size: 1.5rem;
+	margin-bottom: 2rem;
 }
-#remains::before {
-	content: "remains: ";
+input {
+	text-align: center;
+}
+.controls * {
+	border-radius: 2px;
+	border: 1px solid #000000;
+}
+.controls :nth-child(1) {
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+.controls :nth-last-child(1) {
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 </style>
 <script src="audio.js"></script>
 <script>
 
+const modeEmt = document.getElementById("mode");
+const remainsEmt = document.getElementById("remains");
+const workEmt = document.getElementById("work");
+const restEmt = document.getElementById("rest");
+const startEmt = document.getElementById("start");
+const resetEmt = document.getElementById("reset");
+const skipEmt = document.getElementById("skip");
+
 const seconds = 1000;
 const minutes = 60 * seconds;
-
-let workTime = 25 * minutes;
-let restTime = 5 * minutes;
-
-work.addEventListener("change", () => { workTime = Number(work.value) * minutes; });
-rest.addEventListener("change", () => { restTime = Number(rest.value) * minutes; });
 
 const toClockTime = millis => {
 	const seconds = millis / 1000;
@@ -44,48 +78,89 @@ const toClockTime = millis => {
 	const minutes = Math.floor(seconds / 60);
 	const spareSeconds = Math.floor(seconds - minutes * 60);
 
-	return `${minutes}:${spareSeconds}`;
+	return `${minutes}:${spareSeconds.toString().padStart(2, "0")}`;
 };
 
-const interval = 0.9 * seconds;
-let mode = "work";
-let elapsedTime = 0;
+const workColor = "#A7C7E7";
+const restColor = "#CFE0C3";
+
+class Timer {
+	constructor(workTime, restTime) {
+		this.totalTime = {work: workTime, rest: restTime};
+		this.mode = "work";
+		this.elapsedTime = 0;
+	}
+
+	reset() {
+		this.elapsedTime = 0;
+	}
+
+	skip() {
+		this.elapsedTime = this.totalTime[this.mode];
+		this.onTimePassed(0);
+	}
+
+	onTimePassed(time) {
+		this.elapsedTime += time;
+		while (this.elapsedTime >= this.totalTime[this.mode]) {
+			this.elapsedTime -= this.totalTime[this.mode];
+			this.mode = this.mode == "work" ? "rest" : "work";
+		}
+	}
+
+	getRemainsTime() {
+		return this.totalTime[this.mode] - this.elapsedTime;
+	}
+
+	getMode() {
+		return this.mode;
+	}
+
+	setWorkTime(time) {
+		this.totalTime.work = time;
+	}
+
+	setRestTime(time) {
+		this.totalTime.rest = time;
+	}
+}
+
+const interval = 100;
+
+function draw() {
+	remainsEmt.innerHTML = toClockTime(timer.getRemainsTime());
+	modeEmt.innerHTML = timer.getMode();
+	document.body.style.background = timer.getMode() == "work" ? workColor : restColor;
+}
+
+let timer = new Timer(25 * minutes, 5 * minutes);
+let time = Date.now();
+let paused = false;
+
+draw();
 setInterval(() => {
-	elapsedTime += interval;
-
-	let remainsTime;
-
-	if (mode == "work") {
-		if (elapsedTime >= workTime) {
-			elapsedTime = 0;
-			mode = "rest";
-
-			document.body.style.background = "#37f";
-
-			beep(500);
-		}
-	} else if (mode == "rest") {
-		if (elapsedTime >= restTime) {
-			elapsedTime = 0;
-			remainsTime = workTime;
-			mode = "work";
-
-			document.body.style.background = "#999";
-
+	let newTime = Date.now();
+	if (!paused) {
+		const timePassed = newTime - time;
+		const oldMode = timer.getMode();
+		timer.onTimePassed(timePassed);
+		const newMode = timer.getMode();
+		if (oldMode != newMode) {
 			beep(500);
 		}
 	}
-
-	if (mode == "work") {
-		remainsTime = workTime - elapsedTime;
-	} else if (mode == "rest") {
-		remainsTime = restTime - elapsedTime;
-	}
-
-	elapsed.innerHTML = toClockTime(elapsedTime);
-	remains.innerHTML = toClockTime(remainsTime);
+	time = newTime;
+	draw();
 }, interval);
 
-document.body.style.background = "#999";
+
+workEmt.addEventListener("change", () => { timer.setWorkTime(Math.max(1, Number(workEmt.value)) * minutes); draw(); });
+restEmt.addEventListener("change", () => { timer.setRestTime(Math.max(1, Number(restEmt.value)) * minutes); draw(); });
+startEmt.addEventListener("click", () => { paused = !paused; });
+resetEmt.addEventListener("click", () => { timer.reset(); draw(); });
+skipEmt.addEventListener("click", () => { timer.skip(); draw(); });
+
+
+document.body.style.background = workColor;
 
 </script>
