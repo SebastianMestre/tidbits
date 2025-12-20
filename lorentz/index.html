@@ -115,6 +115,7 @@
         }
 
         const NUM_PARTICLES = 500;
+        const NUM_RAINBOW = 400;
         const DT = 0.005;
         const paricles = new ParticleRepository(NUM_PARTICLES);
         const trails = new TrailRepository(NUM_PARTICLES, 20);
@@ -124,10 +125,16 @@
         const x0 = Math.random() * 40 - 20;
         const y0 = Math.random() * 40 - 20;
         const z0 = Math.random() * 40 - 20;
-        for (let i = 0; i < NUM_PARTICLES; ++i) {
+        for (let i = 0; i < NUM_RAINBOW; ++i) {
             const x = x0 + 0.01 * i;
             const y = y0;
             const z = z0;
+            paricles.set(i, x, y, z);
+        }
+        for (let i = NUM_RAINBOW; i < NUM_PARTICLES; ++i) {
+            const x = Math.random() * 40 - 20;
+            const y = Math.random() * 40 - 20;
+            const z = Math.random() * 40 - 20;
             paricles.set(i, x, y, z);
         }
 
@@ -214,11 +221,14 @@
                     ctx.fill();
                 }
 
-                ctx.lineWidth = 1 / scale;
                 for (let i = 0; i < NUM_PARTICLES; ++i) {
                     ctx.beginPath();
 
-                    const color = `hsl(${i * 360 * 3 / 4 / NUM_PARTICLES}, 100%, 50%)`;
+                    ctx.lineWidth = i < NUM_RAINBOW ? 2 / scale : 1 / scale;
+                    const color = i < NUM_RAINBOW
+                        ? `hsl(${i * 360 * 3 / 4 / NUM_RAINBOW}, 100%, 50%)`
+                        : '#666';
+
                     ctx.strokeStyle = color;
                     const trail = trails.get(i);
                     if (trail.length() < 2) {
