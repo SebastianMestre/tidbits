@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Lorentz – Canvas Visualization</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: #050a16;
+            color: #ddd;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                sans-serif;
+        }
+
+        #canvas {
+            width: min(800px, 100vw - 32px);
+            height: min(600px, 100vh - 96px);
+            background: #000;
+            border: 1px solid #333;
+            box-shadow: 0 0 24px rgba(0, 0, 0, 0.7);
+            display: block;
+        }
+
+        #info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="800" height="600">
+        Sorry, your browser does not support HTML5 Canvas.
+    </canvas>
+    <div id="info">
+        Quick visualization of the Lorentz attractor.
+    </div>
+
+    <script>
+
+        class RingBuffer {
+            constructor(capacity) {
+                this.capacity = capacity;
+                this.buffer = new Array(capacity);
+                this.head = 0;
+                this.tail = 0;
+            }
+
+            add(item) {
+                this.buffer[this.tail % this.capacity] = item;
+                this.tail += 1;
+                if (this.tail - this.head > this.capacity) {
+                    this.head += 1;
+                }
+            }
+
+            get(index) {
+                return this.buffer[(this.head + index) % this.capacity];
+            }
+
+            length() {
+                return this.tail - this.head;
+            }
+        }
+
+        class ParticleRepository {
+            constructor(capacity) {
+                this.capacity = capacity;
+                this.buffer = new Array(capacity * 3);
+            }
+
+            x(index) {
+                return this.buffer[index * 3];
+            }
+
+            y(index) {
+                return this.buffer[index * 3 + 1];
+            }
+
+            z(index) {
+                return this.buffer[index * 3 + 2];
+            }
+
+            set(index, x, y, z) {
+                this.buffer[index * 3] = x;
+                this.buffer[index * 3 + 1] = y;
+                this.buffer[index * 3 + 2] = z;
+            }
+        }
+
+        class TrailRepository {
+            constructor(capacity, length) {
+                this.capacity = capacity;
+                this.buffer = new Array(capacity).fill(0).map(() => new RingBuffer(length));
+            }
+
+            update(index, x, y, z) {
+                this.buffer[index].add([x, y, z]);
+            }
+
+            get(index) {
+                return this.buffer[index];
+            }
+        }
+
+        const NUM_PARTICLES = 500;
+        const DT = 0.005;
+        const paricles = new ParticleRepository(NUM_PARTICLES);
+        const trails = new TrailRepository(NUM_PARTICLES, 20);
+
+        console.log(trails);
+
+        const x0 = Math.random() * 40 - 20;
+        const y0 = Math.random() * 40 - 20;
+        const z0 = Math.random() * 40 - 20;
+        for (let i = 0; i < NUM_PARTICLES; ++i) {
+            const x = x0 + 0.01 * i;
+            const y = y0;
+            const z = z0;
+            paricles.set(i, x, y, z);
+        }
+
+
+
+        const step = () => {
+            const a = 10;
+            const b = 28;
+            const c = 8 / 3;
+
+            for (let i = 0; i < NUM_PARTICLES; ++i) {
+                const x = paricles.x(i);
+                const y = paricles.y(i);
+                const z = paricles.z(i);
+                const dx = a * (y - x);
+                const dy = x * (b - z) - y;
+                const dz = x * y - c * z;
+                paricles.set(i, x + dx * DT, y + dy * DT, z + dz * DT);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+            const dpr = window.devicePixelRatio || 1;
+
+            function resizeCanvasToDisplaySize() {
+                const rect = canvas.getBoundingClientRect();
+                const displayWidth = rect.width;
+                const displayHeight = rect.height;
+
+                const width = Math.round(displayWidth * dpr);
+                const height = Math.round(displayHeight * dpr);
+
+                if (canvas.width !== width || canvas.height !== height) {
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            window.addEventListener("resize", resizeCanvasToDisplaySize);
+            resizeCanvasToDisplaySize();
+
+            let t = 0;
+
+            function drawFrame() {
+                resizeCanvasToDisplaySize();
+
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+
+                ctx.clearRect(0, 0, w, h);
+
+                ctx.save();
+                ctx.translate(w / 2, h / 2);
+
+                // scale canvas to cover the space from x=-30 to x=30
+                const scale = Math.min(w, h) / 60;
+                ctx.scale(scale, scale);
+
+                let viewAngle = t * 0.01;
+
+                let angleCos = Math.cos(viewAngle);
+                let angleSin = Math.sin(viewAngle);
+
+                function project(x, y, z) {
+                    return [x * angleCos - y * angleSin, z - 30];
+                }
+
+                for (let i = 0; i < NUM_PARTICLES; ++i) {
+                    const x = paricles.x(i);
+                    const y = paricles.y(i);
+                    const z = paricles.z(i);
+
+                    const [projectedX, projectedY] = project(x, y, z);
+
+                    trails.update(i, x, y, z);
+
+                    ctx.beginPath();
+                    ctx.arc(projectedX, projectedY, 2 / scale, 0, Math.PI * 2);
+                    ctx.fillStyle = 'white';
+                    ctx.fill();
+                }
+
+                ctx.lineWidth = 1 / scale;
+                for (let i = 0; i < NUM_PARTICLES; ++i) {
+                    ctx.beginPath();
+
+                    const color = `hsl(${i * 360 * 3 / 4 / NUM_PARTICLES}, 100%, 50%)`;
+                    ctx.strokeStyle = color;
+                    const trail = trails.get(i);
+                    if (trail.length() < 2) {
+                        continue;
+                    }
+
+                    const [x, y, z] = trail.get(0);
+                    const [projectedX, projectedY] = project(x, y, z);
+
+                    ctx.moveTo(projectedX, projectedY);
+
+                    for (let j = 1; j < trail.length(); ++j) {
+                        const [x, y, z] = trail.get(j);
+                        const [projectedX, projectedY] = project(x, y, z);
+                        ctx.lineTo(projectedX, projectedY);
+                    }
+
+                    ctx.stroke();
+                }
+
+                step();
+
+                ctx.restore();
+
+                t += 1;
+                requestAnimationFrame(drawFrame);
+            }
+
+            requestAnimationFrame(drawFrame);
+        });
+    </script>
+</body>
+
+</html>

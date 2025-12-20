@@ -9,24 +9,6 @@ const ctx = cnv.getContext('2d');
 const DT = 0.01;
 const R = 1;
 
-
-let points;
-const init = p => {
-	points = [p];
-	for (let i = 0; i < 3; ++i)
-		points.push(turn_point(points[i]));
-};
-init(point(1, 0, 0, 1));
-
-const randomize = () => {
-	const x = 1;
-	const y = 0;
-	const theta = 0.4 + Math.random() * 2.4;
-	const vx = Math.cos(theta);
-	const vy = Math.sin(theta);
-	init(point(x, y, vx, vy));
-};
-
 const gravity_acceleration = (p1, p2) => {
 	const dx = p2.x - p1.x;
 	const dy = p2.y - p1.y;
@@ -88,28 +70,57 @@ const draw = ps => {
 	}
 };
 
-let frame = 0;
-const update = () => {
-	if (frame % 100 == 0) {
-		console.log(is_symmetrical(points));
+class FourBodySimulation {
+	constructor(cnv) {
+		this.cnv = cnv;
+		this.points = [];
+		this.frame = 0;
+		this.init(point(1, 0, 0, 1));
 	}
 
-	points = next(points);
-	draw(points);
-	points = next(points);
-	draw(points);
-	points = next(points);
-	draw(points);
-	points = next(points);
-	draw(points);
-	frame += 1;
-};
+	init(p) {
+		this.points = [p];
+		for (let i = 0; i < 3; ++i)
+			this.points.push(turn_point(this.points[i]));
+	}
+
+	randomize() {
+		const x = 1;
+		const y = 0;
+		const theta = 0.4 + Math.random() * 2.4;
+		const vx = Math.cos(theta);
+		const vy = Math.sin(theta);
+		this.init(point(x, y, vx, vy));
+	}
+
+	step() {
+		if (this.frame % 100 == 0) {
+			console.log(is_symmetrical(this.points));
+		}
+
+		this.points = next(this.points);
+		draw(this.points);
+		this.points = next(this.points);
+		draw(this.points);
+		this.points = next(this.points);
+		draw(this.points);
+		this.points = next(this.points);
+		draw(this.points);
+		this.frame += 1;
+	}
+
+	clear() {
+		ctx.clearRect(0, 0, cnv.width, cnv.height);
+	}
+}
+
+const simulation = new FourBodySimulation(cnv);
 
 console.log(cnv);
-update();
-window.setInterval(update, 10);
+simulation.step();
+window.setInterval(() => simulation.step(), 10);
 
 document.getElementById('btn-randomize').addEventListener('click', e => {
-	ctx.clearRect(0,0,cnv.width,cnv.height);
-	randomize();
+	simulation.clear();
+	simulation.randomize();
 });
