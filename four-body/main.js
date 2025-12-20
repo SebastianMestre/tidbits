@@ -19,7 +19,12 @@ const init = p => {
 init(point(1, 0, 0, 1));
 
 const randomize = () => {
-	init(point(Math.random(), Math.random(), Math.random(), Math.random()));
+	const x = 1;
+	const y = 0;
+	const theta = 0.4 + Math.random() * 2.4;
+	const vx = Math.cos(theta);
+	const vy = Math.sin(theta);
+	init(point(x, y, vx, vy));
 };
 
 const gravity_acceleration = (p1, p2) => {
